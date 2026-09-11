@@ -27,6 +27,20 @@ class LegalToolsTest {
         assertFalse(BackupCodec.verify(envelope.copy(payload = "changed")))
     }
 
+    @Test fun encrypted_backup_round_trip_and_wrong_password_fails() {
+        val password = "StrongLegalBackup-2026".toCharArray()
+        val envelope = EncryptedBackupCodec.encrypt("قضايا سرية", password)
+        val restored = EncryptedBackupCodec.decrypt(envelope, password)
+        assertTrue(restored.isSuccess)
+        assertEquals("قضايا سرية", restored.getOrNull())
+        assertTrue(EncryptedBackupCodec.decrypt(envelope, "WrongPassword-000".toCharArray()).isFailure)
+    }
+
+    @Test fun encrypted_backup_rejects_short_password() {
+        val result = runCatching { EncryptedBackupCodec.encrypt("data", "short".toCharArray()) }
+        assertTrue(result.isFailure)
+    }
+
     @Test fun two_step_serial_requires_both_serial_and_confirmation() {
         val valid = TwoStepSerialValidator.validate(LicenseIdentity("install-1234", "SHU-AB12-CD34-EF56", "123456"))
         assertTrue(valid is LicenseCheck.ValidFormat)
