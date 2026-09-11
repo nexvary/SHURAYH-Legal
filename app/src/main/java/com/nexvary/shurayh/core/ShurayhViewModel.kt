@@ -37,7 +37,10 @@ class ShurayhViewModel(
 
     fun addClient(name: String, phone: String, notes: String, nationalId: String = ""): Boolean {
         if (name.isBlank() || phone.isBlank()) return false
-        val item = Client(UUID.randomUUID().toString(), name.trim(), phone.trim(), nationalId.trim().ifBlank { null }, notes.trim())
+        val item = Client(
+            UUID.randomUUID().toString(), name.trim(), phone.trim(),
+            nationalId.trim().takeIf { it.isNotBlank() }, notes.trim()
+        )
         commit(_uiState.value.copy(clients = listOf(item) + _uiState.value.clients))
         return true
     }
@@ -109,7 +112,7 @@ class ShurayhViewModel(
         if (title.isBlank() || type.isBlank()) return false
         val doc = LegalDocument(
             id = UUID.randomUUID().toString(), title = title.trim(), type = type.trim(),
-            caseTitle = caseTitle?.trim()?.ifBlank { null }, updatedAt = updatedAt.ifBlank { "اليوم" }.trim()
+            caseTitle = caseTitle?.trim()?.takeIf { it.isNotBlank() }, updatedAt = updatedAt.ifBlank { "اليوم" }.trim()
         )
         commit(_uiState.value.copy(documents = listOf(doc) + _uiState.value.documents))
         return true
