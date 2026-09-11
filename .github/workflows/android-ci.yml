@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -32,8 +32,18 @@ jobs:
         with:
           gradle-version: '8.11.1'
 
+      - name: Run unit tests
+        run: gradle :app:testDebugUnitTest --stacktrace
+
+      - name: Run Android lint
+        run: gradle :app:lintDebug --stacktrace
+
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace
 
-      - name: Run unit tests
-        run: gradle :app:testDebugUnitTest --stacktrace
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SHURAYH-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
