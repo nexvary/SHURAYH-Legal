@@ -7,6 +7,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.nexvary.shurayh.core.AndroidHearingReminderCoordinator
 import com.nexvary.shurayh.core.SharedPreferencesLegalPersistence
 import com.nexvary.shurayh.core.ShurayhViewModel
 import com.nexvary.shurayh.core.ShurayhViewModelFactory
@@ -17,7 +18,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val vm: ShurayhViewModel = viewModel(
                 factory = ShurayhViewModelFactory(
-                    SharedPreferencesLegalPersistence(applicationContext)
+                    persistence = SharedPreferencesLegalPersistence(applicationContext),
+                    reminders = AndroidHearingReminderCoordinator(applicationContext)
                 )
             )
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
