@@ -12,8 +12,8 @@ android {
         applicationId = "com.nexvary.shurayh"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 80
+        versionName = "0.8.0-dev1080"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
