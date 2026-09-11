@@ -11,13 +11,15 @@ SHURAYH is designed as a local-first legal workspace. Client, case, hearing and 
 - Generated summaries and drafting assistance require lawyer review before professional use.
 
 ## Sensitive storage
-The current implementation persists workspace data using app-private Android SharedPreferences. This is durable local storage but must not be described as encrypted-at-rest. Before a production release containing real client secrets or national IDs, migrate sensitive values to an Android Keystore-backed encrypted data layer and include migration tests.
+The current workspace persistence encrypts the complete serialized cases/clients/hearings/documents payload with AES-256-GCM. The AES key is generated and held by Android Keystore and is not embedded in source code. Existing plaintext v1 local data is readable once and migrated to encrypted v2 storage on load.
+
+The current model protects the persisted workspace payload at rest. Future imported attachments and scan-image files require the same encryption policy before they are allowed to contain real client evidence.
 
 ## Backups
-Backup integrity uses SHA-256 checksums to detect accidental or malicious modification. Integrity alone is not confidentiality. Production backups containing client data require authenticated encryption before export.
+Backup integrity uses SHA-256 checksums to detect accidental or malicious modification. Integrity alone is not confidentiality. Production exported backups containing client data still require authenticated encryption before export.
 
 ## Licensing
 The two-step serial validator currently validates structure only. Production activation must be verified by a protected NEXVARY activation service and must not embed signing secrets in the Android application.
 
 ## Release blockers
-A public production release is blocked until encrypted sensitive storage, signed-release configuration, privacy notice, official legal-content provenance, and device-level regression testing are complete.
+A public production release remains blocked until encrypted attachment/backup export, signed-release configuration, final privacy notice, official legal-content provenance, production activation verification, and device-level regression testing are complete.
