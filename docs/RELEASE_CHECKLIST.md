@@ -3,9 +3,9 @@
 A build may be called a SHURAYH Release Candidate only when every mandatory item below has evidence in CI, source code, or an attached test report.
 
 ## Build & code quality
-- [ ] Unit tests pass.
-- [ ] Android lint passes.
-- [ ] Debug/release candidate APK assembles.
+- [ ] Unit tests pass on the latest commit.
+- [ ] Android lint passes on the latest commit.
+- [ ] Debug/release candidate APK assembles on the latest commit.
 - [ ] No dead navigation routes.
 - [ ] Back navigation is verified for all top-level screens.
 - [ ] Arabic RTL layout has no clipped or overlapping controls on compact and large phones.
@@ -32,13 +32,15 @@ A build may be called a SHURAYH Release Candidate only when every mandatory item
 - [ ] Camera/gallery multi-page scan flow is implemented.
 - [ ] A real OCR engine is integrated and benchmarked on Arabic legal pages.
 - [ ] Original evidence is preserved when OCR/analysis is performed.
-- [ ] Forgery-detection claims are disabled unless backed by a validated model and confidence reporting.
+- [x] Forgery-detection claims remain disabled until backed by a validated model and confidence reporting.
 
 ## Security & privacy
 - [x] Local-first behavior documented.
+- [x] Core persisted workspace uses Android Keystore-backed AES-256-GCM encryption at rest.
+- [x] Legacy plaintext workspace data has an automatic encrypted migration path.
 - [x] Backup integrity/checksum foundation exists.
 - [x] Two-step serial format validation exists with no trial workflow.
-- [ ] Sensitive fields use Keystore-backed encryption at rest.
+- [ ] Imported attachments/scans use encrypted-at-rest storage.
 - [ ] Exported backups use authenticated encryption.
 - [ ] Production activation service verification is implemented.
 - [ ] Privacy notice is finalized.
