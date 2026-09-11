@@ -92,16 +92,19 @@ class ShurayhViewModel(
         ))
     }
 
-    fun addHearing(caseId: String, court: String, date: String, time: String, notes: String): Boolean {
-        val legalCase = _uiState.value.cases.firstOrNull { it.id == caseId } ?: return false
-        if (date.isBlank()) return false
+    fun addHearing(caseId: String, court: String, date: String, time: String, notes: String): Boolean =
+        addHearingRecord(caseId, court, date, time, notes) != null
+
+    fun addHearingRecord(caseId: String, court: String, date: String, time: String, notes: String): Hearing? {
+        val legalCase = _uiState.value.cases.firstOrNull { it.id == caseId } ?: return null
+        if (!HearingDateTimeParser.isValid(date, time)) return null
         val hearing = Hearing(
             id = UUID.randomUUID().toString(), caseId = legalCase.id, caseTitle = legalCase.title,
             court = court.ifBlank { legalCase.court }.trim(), date = date.trim(), time = time.trim(), notes = notes.trim()
         )
-        val cases = _uiState.value.cases.map { if (it.id == caseId) it.copy(nextSession = date.trim()) else it }
+        val cases = _uiState.value.cases.map { if (it.id == caseId) it.copy(nextSession = "${date.trim()} ${time.trim()}") else it }
         commit(_uiState.value.copy(cases = cases, hearings = listOf(hearing) + _uiState.value.hearings))
-        return true
+        return hearing
     }
 
     fun deleteHearing(id: String) {
@@ -120,6 +123,18 @@ class ShurayhViewModel(
 
     fun deleteDocument(id: String) {
         commit(_uiState.value.copy(documents = _uiState.value.documents.filterNot { it.id == id }))
+    }
+
+    fun replaceWorkspace(state: PersistedLegalState) {
+        commit(
+            _uiState.value.copy(
+                cases = state.cases,
+                clients = state.clients,
+                hearings = state.hearings,
+                documents = state.documents,
+                searchQuery = ""
+            )
+        )
     }
 
     fun resetDemoData() {
