@@ -8,7 +8,7 @@ on:
 jobs:
   emulator-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 40
 
     steps:
       - name: Checkout
@@ -37,7 +37,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Run Android 15 smoke test and capture RTL home
+      - name: Run Android 15 device tests and capture RTL home
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
@@ -47,6 +47,7 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
+            gradle :app:connectedDebugAndroidTest --stacktrace
             adb install -r app/build/outputs/apk/debug/app-debug.apk
             adb shell am force-stop com.nexvary.shurayh
             adb shell am start -W -n com.nexvary.shurayh/.MainActivity
@@ -62,4 +63,15 @@ jobs:
           name: SHURAYH-Android15-RTL-screenshot
           path: screenshots/shurayh-home-rtl.png
           if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload instrumentation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SHURAYH-Android15-test-reports
+          path: |
+            app/build/reports/androidTests/
+            app/build/outputs/androidTest-results/
+          if-no-files-found: ignore
           retention-days: 30
