@@ -17,7 +17,8 @@ data class ShurayhUiState(
 )
 
 class ShurayhViewModel(
-    private val persistence: LegalPersistence = NoOpLegalPersistence
+    private val persistence: LegalPersistence = NoOpLegalPersistence,
+    private val reminders: HearingReminderCoordinator = NoOpHearingReminderCoordinator
 ) : ViewModel() {
     private val initial = persistence.load()
     private val _uiState = MutableStateFlow(
@@ -85,6 +86,7 @@ class ShurayhViewModel(
 
     fun deleteCase(id: String) {
         val target = _uiState.value.cases.firstOrNull { it.id == id }
+        _uiState.value.hearings.filter { it.caseId == id }.forEach { reminders.cancel(it.id) }
         commit(_uiState.value.copy(
             cases = _uiState.value.cases.filterNot { it.id == id },
             hearings = _uiState.value.hearings.filterNot { it.caseId == id },
@@ -104,10 +106,12 @@ class ShurayhViewModel(
         )
         val cases = _uiState.value.cases.map { if (it.id == caseId) it.copy(nextSession = "${date.trim()} ${time.trim()}") else it }
         commit(_uiState.value.copy(cases = cases, hearings = listOf(hearing) + _uiState.value.hearings))
+        reminders.schedule(hearing)
         return hearing
     }
 
     fun deleteHearing(id: String) {
+        reminders.cancel(id)
         commit(_uiState.value.copy(hearings = _uiState.value.hearings.filterNot { it.id == id }))
     }
 
@@ -126,6 +130,7 @@ class ShurayhViewModel(
     }
 
     fun replaceWorkspace(state: PersistedLegalState) {
+        _uiState.value.hearings.forEach { reminders.cancel(it.id) }
         commit(
             _uiState.value.copy(
                 cases = state.cases,
@@ -135,9 +140,11 @@ class ShurayhViewModel(
                 searchQuery = ""
             )
         )
+        state.hearings.forEach { reminders.schedule(it) }
     }
 
     fun resetDemoData() {
+        _uiState.value.hearings.forEach { reminders.cancel(it.id) }
         commit(ShurayhUiState())
     }
 
@@ -147,7 +154,10 @@ class ShurayhViewModel(
     }
 }
 
-class ShurayhViewModelFactory(private val persistence: LegalPersistence) : ViewModelProvider.Factory {
+class ShurayhViewModelFactory(
+    private val persistence: LegalPersistence,
+    private val reminders: HearingReminderCoordinator = NoOpHearingReminderCoordinator
+) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T = ShurayhViewModel(persistence) as T
+    override fun <T : ViewModel> create(modelClass: Class<T>): T = ShurayhViewModel(persistence, reminders) as T
 }
