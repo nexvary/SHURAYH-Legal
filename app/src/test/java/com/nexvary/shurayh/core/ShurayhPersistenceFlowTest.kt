@@ -17,32 +17,38 @@ class ShurayhPersistenceFlowTest {
         val vm = ShurayhViewModel(store)
 
         assertTrue(vm.addClient("موكل جديد", "01012345678", "ملاحظة", "12345678901234"))
-        assertTrue(vm.addCase("دعوى اختبار", "محكمة القاهرة", "1/2026", "موكل جديد", "20 سبتمبر 2026"))
+        assertTrue(vm.addCase("دعوى اختبار", "محكمة القاهرة", "1/2026", "موكل جديد", "2026-09-20 10:00"))
         val legalCase = vm.uiState.value.cases.first { it.title == "دعوى اختبار" }
-        assertTrue(vm.addHearing(legalCase.id, "", "22 سبتمبر 2026", "10:30", "جلسة اختبار"))
-        assertTrue(vm.addDocument("مذكرة اختبار", "مذكرة", legalCase.title, "12 سبتمبر 2026"))
+        assertTrue(vm.addHearing(legalCase.id, "", "2026-09-22", "10:30", "جلسة اختبار"))
+        assertTrue(vm.addDocument("مذكرة اختبار", "مذكرة", legalCase.title, "2026-09-12"))
 
         val saved = requireNotNull(store.saved)
         assertTrue(saved.clients.any { it.name == "موكل جديد" })
         assertTrue(saved.cases.any { it.id == legalCase.id })
         assertTrue(saved.hearings.any { it.caseId == legalCase.id })
         assertTrue(saved.documents.any { it.caseTitle == legalCase.title })
-        assertEquals("22 سبتمبر 2026", vm.uiState.value.cases.first { it.id == legalCase.id }.nextSession)
+        assertEquals("2026-09-22 10:30", vm.uiState.value.cases.first { it.id == legalCase.id }.nextSession)
     }
 
     @Test fun deleting_case_cleans_linked_hearings_and_documents() {
         val store = MemoryPersistence()
         val vm = ShurayhViewModel(store)
-        assertTrue(vm.addCase("قضية للحذف", "محكمة", "2/2026", "موكل", "غدًا"))
+        assertTrue(vm.addCase("قضية للحذف", "محكمة", "2/2026", "موكل", "2026-09-23 09:00"))
         val legalCase = vm.uiState.value.cases.first { it.title == "قضية للحذف" }
-        assertTrue(vm.addHearing(legalCase.id, "", "غدًا", "09:00", ""))
-        assertTrue(vm.addDocument("مستند مرتبط", "مذكرة", legalCase.title, "اليوم"))
+        assertTrue(vm.addHearing(legalCase.id, "", "2026-09-23", "09:00", ""))
+        assertTrue(vm.addDocument("مستند مرتبط", "مذكرة", legalCase.title, "2026-09-12"))
 
         vm.deleteCase(legalCase.id)
 
         assertFalse(vm.uiState.value.cases.any { it.id == legalCase.id })
         assertFalse(vm.uiState.value.hearings.any { it.caseId == legalCase.id })
         assertFalse(vm.uiState.value.documents.any { it.caseTitle == legalCase.title })
+    }
+
+    @Test fun ambiguous_hearing_date_is_rejected() {
+        val vm = ShurayhViewModel()
+        val legalCase = vm.uiState.value.cases.first()
+        assertFalse(vm.addHearing(legalCase.id, legalCase.court, "غدًا", "العاشرة", ""))
     }
 
     @Test fun case_status_cycles_through_workflow() {
