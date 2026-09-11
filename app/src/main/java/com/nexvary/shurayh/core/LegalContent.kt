@@ -57,8 +57,8 @@ object LegalSearchEngine {
         if (tokens.isEmpty()) return emptyList()
         return corpus.mapNotNull { article ->
             val haystack = normalize(listOf(article.heading, article.text, article.articleNumber, article.tags.joinToString(" ")).joinToString(" "))
-            val score = tokens.sumOf { token ->
-                when {
+            val score: Int = tokens.fold(0) { total, token ->
+                total + when {
                     haystack.contains(" $token ") -> 4
                     haystack.contains(token) -> 2
                     else -> 0
