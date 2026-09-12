@@ -53,6 +53,7 @@ private object Routes {
     const val ABOUT = "about"
     const val NOTIFICATIONS = "notifications"
     const val MENU = "menu"
+    const val TOR_MESSAGING = "tor_messaging"
     const val CASE_DETAIL = "case/{caseId}"
     fun caseDetail(id: String) = "case/$id"
 }
@@ -104,6 +105,7 @@ fun ShurayhRoot(vm: ShurayhViewModel) {
                 composable(Routes.ABOUT) { AboutScreen(nav) }
                 composable(Routes.NOTIFICATIONS) { NotificationsScreen(nav, state) }
                 composable(Routes.MENU) { MenuScreen(nav) }
+                composable(Routes.TOR_MESSAGING) { TorMessagingScreen(nav) }
                 composable(
                     route = Routes.CASE_DETAIL,
                     arguments = listOf(navArgument("caseId") { type = NavType.StringType })
@@ -213,6 +215,7 @@ private fun HomeScreen(nav: NavHostController, state: ShurayhUiState) {
         ModuleItem("المستندات", "مذكرات وعقود ونماذج", Icons.Outlined.Description, Routes.DOCUMENTS),
         ModuleItem("البحث", "بحث موحد محلي", Icons.Outlined.Search, Routes.SEARCH),
         ModuleItem("ملف المكتب", "مؤشرات العمل", Icons.Outlined.FolderShared, Routes.OFFICE),
+        ModuleItem("المراسلة الآمنة", "Tor • محادثات واتصال آمن", Icons.Outlined.Lock, Routes.TOR_MESSAGING),
         ModuleItem("المحاكم", "دليل الجهات", Icons.Outlined.AccountBalance, Routes.COURTS)
     )
     LazyColumn(
@@ -296,6 +299,7 @@ private fun MenuScreen(nav: NavHostController) {
         ModuleItem("المستندات", "مذكرات وعقود ونماذج", Icons.Outlined.Description, Routes.DOCUMENTS),
         ModuleItem("البحث", "بحث موحد محلي", Icons.Outlined.Search, Routes.SEARCH),
         ModuleItem("ملف المكتب", "مؤشرات العمل", Icons.Outlined.FolderShared, Routes.OFFICE),
+        ModuleItem("المراسلة الآمنة", "Tor • محادثات واتصال آمن", Icons.Outlined.Lock, Routes.TOR_MESSAGING),
         ModuleItem("المحاكم", "دليل الجهات", Icons.Outlined.AccountBalance, Routes.COURTS)
     )
     Page("القائمة", "كل أقسام SHURAYH") { p ->
