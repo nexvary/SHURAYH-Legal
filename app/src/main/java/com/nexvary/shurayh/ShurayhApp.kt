@@ -35,8 +35,8 @@ private val AppBlack = Color(0xFF070A0D)
 private val CardBlack = Color(0xFF0A0D10)
 private val Silver = Color(0xFFB7BABE)
 private val Platinum = Color(0xFFE1E2E4)
-private val RoyalGold = Color(0xFFD4AF37)
-private val MutedGold = Color(0xFFB99432)
+private val RoyalGold = Color(0xFFC9A44A)
+private val MutedGold = Color(0xFF9A7630)
 private val Danger = RoyalGold
 
 private object Routes {
