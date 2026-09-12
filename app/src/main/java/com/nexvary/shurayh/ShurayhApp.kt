@@ -302,7 +302,7 @@ private fun MenuScreen(nav: NavHostController) {
         ModuleItem("المراسلة الآمنة", "Tor • محادثات واتصال آمن", Icons.Outlined.Lock, Routes.TOR_MESSAGING),
         ModuleItem("المحاكم", "دليل الجهات", Icons.Outlined.AccountBalance, Routes.COURTS)
     )
-    Page("القائمة", "كل أقسام SHURAYH") { p ->
+    Page("القائمة", "كل أقسام SHURAYH", nav) { p ->
         LazyColumn(
             Modifier.fillMaxSize().padding(p),
             contentPadding = PaddingValues(16.dp),
@@ -332,7 +332,7 @@ private fun MenuScreen(nav: NavHostController) {
 
 @Composable
 private fun NotificationsScreen(nav: NavHostController, state: ShurayhUiState) {
-    Page("الإشعارات", "الجلسات والتنبيهات") { p ->
+    Page("الإشعارات", "الجلسات والتنبيهات", nav) { p ->
         LazyColumn(
             Modifier.fillMaxSize().padding(p),
             contentPadding = PaddingValues(16.dp),
@@ -602,7 +602,7 @@ private fun CourtsScreen(nav: NavHostController) {
 @Composable
 private fun SettingsScreen(nav: NavHostController, vm: ShurayhViewModel) {
     var reset by remember { mutableStateOf(false) }
-    Page("الضبط", "الخصوصية والبيانات") { p ->
+    Page("الضبط", "الخصوصية والبيانات", nav) { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item { InfoCard("التخزين", "محلي على الجهاز • لا يتم رفع ملفات العملاء تلقائيًا", Icons.Outlined.Storage) }
             item { InfoCard("الاتجاه", "العربية RTL مفعلة افتراضيًا", Icons.Outlined.FormatTextdirectionRToL) }
@@ -621,7 +621,7 @@ private fun SettingsScreen(nav: NavHostController, vm: ShurayhViewModel) {
 
 @Composable
 private fun AboutScreen(nav: NavHostController) {
-    Page("عنا", "SHURAYH • NEXVARY Legal Technology") { p ->
+    Page("عنا", "SHURAYH • NEXVARY Legal Technology", nav) { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item { InfoCard("SHURAYH", "منصة عمل قانونية للمحامي: قضايا، عملاء، جلسات، مستندات وبحث قانوني محلي.", Icons.Outlined.Balance) }
             item { InfoCard("مبدأ الخصوصية", "Local-first مع تقليل الصلاحيات وعدم إرسال بيانات العملاء تلقائيًا.", Icons.Outlined.Security) }
