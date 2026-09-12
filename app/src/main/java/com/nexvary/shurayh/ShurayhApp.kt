@@ -1,7 +1,9 @@
 package com.nexvary.shurayh
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -24,18 +26,18 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.nexvary.shurayh.core.*
 
-private val Navy = Color(0xFF0C1319)
-private val Gunmetal = Color(0xFF2E3945)
-private val Silver = Color(0xFF9E9B98)
-private val Platinum = Color(0xFFD9D7D4)
-private val ElectricBlue = Color(0xFF6A88A0)
-private val RoyalGold = Color(0xFFC9A44A)
-private val Success = Color(0xFF5FAF83)
-private val Danger = Color(0xFFC96A6A)
+private val AppBlack = Color(0xFF070A0D)
+private val CardBlack = Color(0xFF0A0D10)
+private val Silver = Color(0xFFB7BABE)
+private val Platinum = Color(0xFFE1E2E4)
+private val RoyalGold = Color(0xFFD4AF37)
+private val MutedGold = Color(0xFFB99432)
+private val Danger = RoyalGold
 
 private object Routes {
     const val HOME = "home"
@@ -49,44 +51,120 @@ private object Routes {
     const val COURTS = "courts"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
+    const val NOTIFICATIONS = "notifications"
+    const val MENU = "menu"
     const val CASE_DETAIL = "case/{caseId}"
     fun caseDetail(id: String) = "case/$id"
 }
 
 data class ModuleItem(val title: String, val subtitle: String, val icon: ImageVector, val route: String)
+data class BottomItem(val title: String, val icon: ImageVector, val route: String)
 
 @Composable
 fun ShurayhRoot(vm: ShurayhViewModel) {
     val state by vm.uiState.collectAsStateWithLifecycle()
     val nav = rememberNavController()
+    val entry by nav.currentBackStackEntryAsState()
+    val currentRoute = entry?.destination?.route
+    val bottomRoutes = setOf(Routes.HOME, Routes.MENU, Routes.NOTIFICATIONS, Routes.ABOUT, Routes.SETTINGS)
+
     MaterialTheme(
         colorScheme = darkColorScheme(
             primary = RoyalGold,
-            secondary = ElectricBlue,
-            background = Navy,
-            surface = Gunmetal,
+            secondary = Silver,
+            background = AppBlack,
+            surface = CardBlack,
+            surfaceVariant = CardBlack,
             onBackground = Platinum,
-            onSurface = Platinum
+            onSurface = Platinum,
+            outline = Silver
         )
     ) {
-        NavHost(navController = nav, startDestination = Routes.HOME) {
-            composable(Routes.HOME) { HomeScreen(nav, state) }
-            composable(Routes.CASES) { CasesScreen(nav, state, vm) }
-            composable(Routes.CLIENTS) { ClientsScreen(nav, state, vm) }
-            composable(Routes.HEARINGS) { HearingsScreen(nav, state, vm) }
-            composable(Routes.LAWS) { LawsScreen(nav, state.lawBooks) }
-            composable(Routes.DOCUMENTS) { DocumentsScreen(nav, state, vm) }
-            composable(Routes.SEARCH) { SearchScreen(nav, state, vm::setSearchQuery) }
-            composable(Routes.OFFICE) { OfficeScreen(nav, state) }
-            composable(Routes.COURTS) { CourtsScreen(nav) }
-            composable(Routes.SETTINGS) { SettingsScreen(nav, vm) }
-            composable(Routes.ABOUT) { AboutScreen(nav) }
-            composable(
-                route = Routes.CASE_DETAIL,
-                arguments = listOf(navArgument("caseId") { type = NavType.StringType })
-            ) { entry ->
-                val id = entry.arguments?.getString("caseId")
-                CaseDetailScreen(nav, state, vm, id)
+        Scaffold(
+            containerColor = AppBlack,
+            bottomBar = {
+                if (currentRoute in bottomRoutes) ShurayhBottomBar(nav, currentRoute)
+            }
+        ) { shellPadding ->
+            NavHost(
+                navController = nav,
+                startDestination = Routes.HOME,
+                modifier = Modifier.padding(shellPadding)
+            ) {
+                composable(Routes.HOME) { HomeScreen(nav, state) }
+                composable(Routes.CASES) { CasesScreen(nav, state, vm) }
+                composable(Routes.CLIENTS) { ClientsScreen(nav, state, vm) }
+                composable(Routes.HEARINGS) { HearingsScreen(nav, state, vm) }
+                composable(Routes.LAWS) { LawsScreen(nav, state.lawBooks) }
+                composable(Routes.DOCUMENTS) { DocumentsScreen(nav, state, vm) }
+                composable(Routes.SEARCH) { SearchScreen(nav, state, vm::setSearchQuery) }
+                composable(Routes.OFFICE) { OfficeScreen(nav, state) }
+                composable(Routes.COURTS) { CourtsScreen(nav) }
+                composable(Routes.SETTINGS) { SettingsScreen(nav, vm) }
+                composable(Routes.ABOUT) { AboutScreen(nav) }
+                composable(Routes.NOTIFICATIONS) { NotificationsScreen(nav, state) }
+                composable(Routes.MENU) { MenuScreen(nav) }
+                composable(
+                    route = Routes.CASE_DETAIL,
+                    arguments = listOf(navArgument("caseId") { type = NavType.StringType })
+                ) { detailEntry ->
+                    val id = detailEntry.arguments?.getString("caseId")
+                    CaseDetailScreen(nav, state, vm, id)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ShurayhBottomBar(nav: NavHostController, currentRoute: String?) {
+    val items = listOf(
+        BottomItem("القائمة", Icons.Outlined.Menu, Routes.MENU),
+        BottomItem("الإشعارات", Icons.Outlined.NotificationsNone, Routes.NOTIFICATIONS),
+        BottomItem("الرئيسية", Icons.Outlined.Home, Routes.HOME),
+        BottomItem("عنا", Icons.Outlined.Info, Routes.ABOUT),
+        BottomItem("الضبط", Icons.Outlined.Settings, Routes.SETTINGS)
+    )
+    Surface(
+        color = CardBlack,
+        border = BorderStroke(1.dp, Silver.copy(alpha = .75f)),
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        NavigationBar(containerColor = Color.Transparent, tonalElevation = 0.dp) {
+            items.forEach { item ->
+                val selected = currentRoute == item.route
+                NavigationBarItem(
+                    selected = selected,
+                    onClick = {
+                        if (!selected) nav.navigate(item.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(Routes.HOME) { saveState = true }
+                        }
+                    },
+                    icon = {
+                        Icon(
+                            item.icon,
+                            contentDescription = item.title,
+                            tint = if (selected) RoyalGold else MutedGold
+                        )
+                    },
+                    label = {
+                        Text(
+                            item.title,
+                            color = if (selected) RoyalGold else Platinum,
+                            fontSize = 10.sp,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                        )
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = RoyalGold,
+                        selectedTextColor = RoyalGold,
+                        unselectedIconColor = MutedGold,
+                        unselectedTextColor = Platinum,
+                        indicatorColor = RoyalGold.copy(alpha = .10f)
+                    )
+                )
             }
         }
     }
@@ -103,7 +181,7 @@ private fun Page(
 ) {
     if (nav != null) BackHandler { nav.popBackStack() }
     Scaffold(
-        containerColor = Navy,
+        containerColor = AppBlack,
         topBar = {
             TopAppBar(
                 title = {
@@ -117,7 +195,7 @@ private fun Page(
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, "رجوع", tint = RoyalGold)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Navy)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = AppBlack)
             )
         },
         floatingActionButton = { fab?.invoke() },
@@ -137,36 +215,54 @@ private fun HomeScreen(nav: NavHostController, state: ShurayhUiState) {
         ModuleItem("ملف المكتب", "مؤشرات العمل", Icons.Outlined.FolderShared, Routes.OFFICE),
         ModuleItem("المحاكم", "دليل الجهات", Icons.Outlined.AccountBalance, Routes.COURTS)
     )
-    Page("شُرَيْح", "SHURAYH • المساعد القانوني الذكي للمحامي") { p ->
-        LazyColumn(
-            Modifier.fillMaxSize().padding(p).background(Navy),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                Card(colors = CardDefaults.cardColors(containerColor = Gunmetal), shape = RoundedCornerShape(22.dp)) {
-                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    LazyColumn(
+        Modifier.fillMaxSize().background(AppBlack),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                Text("شُرَيْح", color = RoyalGold, fontSize = 30.sp, fontWeight = FontWeight.Black)
+                Text("SHURAYH", color = RoyalGold, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text("المساعد القانوني الذكي للمحامي", color = Silver, fontSize = 12.sp)
+            }
+        }
+        item {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = CardBlack),
+                shape = RoundedCornerShape(22.dp),
+                border = BorderStroke(1.dp, Silver.copy(alpha = .90f))
+            ) {
+                Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.Balance, null, tint = RoyalGold, modifier = Modifier.size(34.dp))
+                        Spacer(Modifier.width(10.dp))
                         Text("مساحة العمل القانونية", color = RoyalGold, fontSize = 22.sp, fontWeight = FontWeight.Black)
-                        Text("${state.cases.size} قضايا • ${state.clients.size} عملاء • ${state.hearings.size} جلسات • ${state.documents.size} مستندات", color = Platinum)
-                        Text("البيانات تحفظ محليًا على الجهاز.", color = Silver, fontSize = 12.sp)
                     }
-                }
-            }
-            items(modules.chunked(2)) { row ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    row.forEach { item ->
-                        ModuleCard(item, Modifier.weight(1f)) { nav.navigate(item.route) }
+                    Text(
+                        "${state.cases.size} قضايا  •  ${state.clients.size} عملاء  •  ${state.hearings.size} جلسات  •  ${state.documents.size} مستندات",
+                        color = Platinum
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.Security, null, tint = RoyalGold, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("البيانات تحفظ محليًا على الجهاز", color = Silver, fontSize = 12.sp)
                     }
-                    if (row.size == 1) Spacer(Modifier.weight(1f))
-                }
-            }
-            item {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    TextButton(onClick = { nav.navigate(Routes.SETTINGS) }) { Icon(Icons.Outlined.Settings, null); Spacer(Modifier.width(6.dp)); Text("الإعدادات") }
-                    TextButton(onClick = { nav.navigate(Routes.ABOUT) }) { Icon(Icons.Outlined.Info, null); Spacer(Modifier.width(6.dp)); Text("حول") }
                 }
             }
         }
+        items(modules.chunked(2)) { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                row.forEach { item ->
+                    ModuleCard(item, Modifier.weight(1f)) { nav.navigate(item.route) }
+                }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+        item { Spacer(Modifier.height(4.dp)) }
     }
 }
 
@@ -174,13 +270,74 @@ private fun HomeScreen(nav: NavHostController, state: ShurayhUiState) {
 private fun ModuleCard(item: ModuleItem, modifier: Modifier, onClick: () -> Unit) {
     Card(
         modifier = modifier.height(136.dp).clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = Gunmetal),
-        shape = RoundedCornerShape(18.dp)
+        colors = CardDefaults.cardColors(containerColor = CardBlack),
+        shape = RoundedCornerShape(18.dp),
+        border = BorderStroke(1.dp, Silver.copy(alpha = .82f))
     ) {
-        Column(Modifier.fillMaxSize().padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Icon(item.icon, item.title, tint = RoyalGold)
-            Text(item.title, color = Platinum, fontWeight = FontWeight.Bold)
+        Column(
+            Modifier.fillMaxSize().padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.End
+        ) {
+            Icon(item.icon, item.title, tint = RoyalGold, modifier = Modifier.size(30.dp))
+            Text(item.title, color = Platinum, fontWeight = FontWeight.Bold, fontSize = 17.sp)
             Text(item.subtitle, color = Silver, fontSize = 11.sp, lineHeight = 16.sp)
+        }
+    }
+}
+
+@Composable
+private fun MenuScreen(nav: NavHostController) {
+    val modules = listOf(
+        ModuleItem("القضايا", "إدارة ملفات القضايا", Icons.Outlined.Gavel, Routes.CASES),
+        ModuleItem("العملاء", "بيانات الموكلين", Icons.Outlined.PeopleAlt, Routes.CLIENTS),
+        ModuleItem("الجلسات", "الأجندة والتنبيهات", Icons.Outlined.CalendarMonth, Routes.HEARINGS),
+        ModuleItem("مكتبة القانون", "مصادر قانونية مرجعية", Icons.Outlined.MenuBook, Routes.LAWS),
+        ModuleItem("المستندات", "مذكرات وعقود ونماذج", Icons.Outlined.Description, Routes.DOCUMENTS),
+        ModuleItem("البحث", "بحث موحد محلي", Icons.Outlined.Search, Routes.SEARCH),
+        ModuleItem("ملف المكتب", "مؤشرات العمل", Icons.Outlined.FolderShared, Routes.OFFICE),
+        ModuleItem("المحاكم", "دليل الجهات", Icons.Outlined.AccountBalance, Routes.COURTS)
+    )
+    Page("القائمة", "كل أقسام SHURAYH") { p ->
+        LazyColumn(
+            Modifier.fillMaxSize().padding(p),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            items(modules) { item ->
+                Card(
+                    modifier = Modifier.fillMaxWidth().clickable { nav.navigate(item.route) },
+                    colors = CardDefaults.cardColors(containerColor = CardBlack),
+                    border = BorderStroke(1.dp, Silver.copy(alpha = .72f)),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(item.icon, null, tint = RoyalGold)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(item.title, color = Platinum, fontWeight = FontWeight.Bold)
+                            Text(item.subtitle, color = Silver, fontSize = 11.sp)
+                        }
+                        Icon(Icons.AutoMirrored.Outlined.ArrowBack, null, tint = Silver)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NotificationsScreen(nav: NavHostController, state: ShurayhUiState) {
+    Page("الإشعارات", "الجلسات والتنبيهات") { p ->
+        LazyColumn(
+            Modifier.fillMaxSize().padding(p),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            if (state.hearings.isEmpty()) item { EmptyCard("لا توجد إشعارات جلسات حاليًا") }
+            items(state.hearings, key = { it.id }) { h ->
+                InfoCard(h.caseTitle, "${h.date} • ${h.time} • ${h.court}", Icons.Outlined.NotificationsActive)
+            }
         }
     }
 }
@@ -189,14 +346,15 @@ private fun ModuleCard(item: ModuleItem, modifier: Modifier, onClick: () -> Unit
 private fun CasesScreen(nav: NavHostController, state: ShurayhUiState, vm: ShurayhViewModel) {
     var showAdd by remember { mutableStateOf(false) }
     Page("القضايا", "ملفات القضايا وحالتها", nav, fab = {
-        FloatingActionButton(onClick = { showAdd = true }, containerColor = RoyalGold) { Icon(Icons.Outlined.Add, "إضافة قضية") }
+        FloatingActionButton(onClick = { showAdd = true }, containerColor = RoyalGold) { Icon(Icons.Outlined.Add, "إضافة قضية", tint = AppBlack) }
     }) { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (state.cases.isEmpty()) item { EmptyCard("لا توجد قضايا بعد") }
             items(state.cases, key = { it.id }) { c ->
                 Card(
                     Modifier.fillMaxWidth().clickable { nav.navigate(Routes.caseDetail(c.id)) },
-                    colors = CardDefaults.cardColors(containerColor = Gunmetal)
+                    colors = CardDefaults.cardColors(containerColor = CardBlack),
+                    border = BorderStroke(1.dp, Silver.copy(alpha = .65f))
                 ) {
                     Column(Modifier.padding(15.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -205,7 +363,7 @@ private fun CasesScreen(nav: NavHostController, state: ShurayhUiState, vm: Shura
                         }
                         Text("${c.caseNumber} • ${c.court}", color = Silver, fontSize = 12.sp)
                         Text("الموكل: ${c.clientName}", color = Platinum, fontSize = 13.sp)
-                        Text("الجلسة القادمة: ${c.nextSession}", color = ElectricBlue, fontSize = 12.sp)
+                        Text("الجلسة القادمة: ${c.nextSession}", color = RoyalGold, fontSize = 12.sp)
                     }
                 }
             }
@@ -252,21 +410,21 @@ private fun ClientsScreen(nav: NavHostController, state: ShurayhUiState, vm: Shu
     var add by remember { mutableStateOf(false) }
     var deleteId by remember { mutableStateOf<String?>(null) }
     Page("العملاء", "ملفات الموكلين", nav, fab = {
-        FloatingActionButton(onClick = { add = true }, containerColor = RoyalGold) { Icon(Icons.Outlined.PersonAdd, "إضافة عميل") }
+        FloatingActionButton(onClick = { add = true }, containerColor = RoyalGold) { Icon(Icons.Outlined.PersonAdd, "إضافة عميل", tint = AppBlack) }
     }) { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (state.clients.isEmpty()) item { EmptyCard("لا يوجد عملاء") }
             items(state.clients, key = { it.id }) { c ->
-                Card(colors = CardDefaults.cardColors(containerColor = Gunmetal)) {
+                LuxuryCard {
                     Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Outlined.Person, null, tint = RoyalGold)
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(c.name, color = Platinum, fontWeight = FontWeight.Bold)
-                            Text(c.phone, color = ElectricBlue, fontSize = 12.sp)
+                            Text(c.phone, color = RoyalGold, fontSize = 12.sp)
                             if (c.notes.isNotBlank()) Text(c.notes, color = Silver, fontSize = 11.sp)
                         }
-                        IconButton(onClick = { deleteId = c.id }) { Icon(Icons.Outlined.Delete, "حذف", tint = Danger) }
+                        IconButton(onClick = { deleteId = c.id }) { Icon(Icons.Outlined.Delete, "حذف", tint = MutedGold) }
                     }
                 }
             }
@@ -280,21 +438,21 @@ private fun ClientsScreen(nav: NavHostController, state: ShurayhUiState, vm: Shu
 private fun HearingsScreen(nav: NavHostController, state: ShurayhUiState, vm: ShurayhViewModel) {
     var add by remember { mutableStateOf(false) }
     Page("الجلسات", "أجندة مرتبطة بملفات القضايا", nav, fab = {
-        FloatingActionButton(onClick = { add = true }, containerColor = RoyalGold) { Icon(Icons.Outlined.AddAlert, "إضافة جلسة") }
+        FloatingActionButton(onClick = { add = true }, containerColor = RoyalGold) { Icon(Icons.Outlined.AddAlert, "إضافة جلسة", tint = AppBlack) }
     }) { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (state.hearings.isEmpty()) item { EmptyCard("لا توجد جلسات مسجلة") }
             items(state.hearings, key = { it.id }) { h ->
-                Card(colors = CardDefaults.cardColors(containerColor = Gunmetal)) {
+                LuxuryCard {
                     Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Outlined.CalendarMonth, null, tint = RoyalGold)
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(h.caseTitle, color = Platinum, fontWeight = FontWeight.Bold)
-                            Text("${h.date} • ${h.time}", color = ElectricBlue, fontSize = 12.sp)
+                            Text("${h.date} • ${h.time}", color = RoyalGold, fontSize = 12.sp)
                             Text(h.court, color = Silver, fontSize = 11.sp)
                         }
-                        IconButton(onClick = { vm.deleteHearing(h.id) }) { Icon(Icons.Outlined.Delete, "حذف", tint = Danger) }
+                        IconButton(onClick = { vm.deleteHearing(h.id) }) { Icon(Icons.Outlined.Delete, "حذف", tint = MutedGold) }
                     }
                 }
             }
@@ -307,21 +465,21 @@ private fun HearingsScreen(nav: NavHostController, state: ShurayhUiState, vm: Sh
 private fun DocumentsScreen(nav: NavHostController, state: ShurayhUiState, vm: ShurayhViewModel) {
     var add by remember { mutableStateOf(false) }
     Page("المستندات", "المذكرات والعقود والنماذج", nav, fab = {
-        FloatingActionButton(onClick = { add = true }, containerColor = RoyalGold) { Icon(Icons.Outlined.NoteAdd, "إضافة مستند") }
+        FloatingActionButton(onClick = { add = true }, containerColor = RoyalGold) { Icon(Icons.Outlined.NoteAdd, "إضافة مستند", tint = AppBlack) }
     }) { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (state.documents.isEmpty()) item { EmptyCard("لا توجد مستندات") }
             items(state.documents, key = { it.id }) { d ->
-                Card(colors = CardDefaults.cardColors(containerColor = Gunmetal)) {
+                LuxuryCard {
                     Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Outlined.Description, null, tint = RoyalGold)
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(d.title, color = Platinum, fontWeight = FontWeight.Bold)
                             Text("${d.type} • ${d.updatedAt}", color = Silver, fontSize = 11.sp)
-                            d.caseTitle?.let { Text("القضية: $it", color = ElectricBlue, fontSize = 11.sp) }
+                            d.caseTitle?.let { Text("القضية: $it", color = RoyalGold, fontSize = 11.sp) }
                         }
-                        IconButton(onClick = { vm.deleteDocument(d.id) }) { Icon(Icons.Outlined.Delete, "حذف", tint = Danger) }
+                        IconButton(onClick = { vm.deleteDocument(d.id) }) { Icon(Icons.Outlined.Delete, "حذف", tint = MutedGold) }
                     }
                 }
             }
@@ -350,7 +508,14 @@ private fun SearchScreen(nav: NavHostController, state: ShurayhUiState, onQuery:
     Page("البحث", "بحث موحد داخل بيانات SHURAYH", nav) { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item {
-                OutlinedTextField(value = state.searchQuery, onValueChange = onQuery, modifier = Modifier.fillMaxWidth(), singleLine = true, label = { Text("اسم، رقم قضية، محكمة، مستند...") }, leadingIcon = { Icon(Icons.Outlined.Search, null) })
+                OutlinedTextField(
+                    value = state.searchQuery,
+                    onValueChange = onQuery,
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    label = { Text("اسم، رقم قضية، محكمة، مستند...") },
+                    leadingIcon = { Icon(Icons.Outlined.Search, null, tint = RoyalGold) }
+                )
             }
             if (q.isBlank()) item { EmptyCard("اكتب كلمة للبحث") } else {
                 item { SectionTitle("القضايا (${cases.size})") }
@@ -395,12 +560,12 @@ private fun CourtsScreen(nav: NavHostController) {
 @Composable
 private fun SettingsScreen(nav: NavHostController, vm: ShurayhViewModel) {
     var reset by remember { mutableStateOf(false) }
-    Page("الإعدادات", "الخصوصية والبيانات", nav) { p ->
+    Page("الضبط", "الخصوصية والبيانات") { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item { InfoCard("التخزين", "محلي على الجهاز • لا يتم رفع ملفات العملاء تلقائيًا", Icons.Outlined.Storage) }
             item { InfoCard("الاتجاه", "العربية RTL مفعلة افتراضيًا", Icons.Outlined.FormatTextdirectionRToL) }
             item { InfoCard("Android", "متوافق مع Android 15 / API 35", Icons.Outlined.Android) }
-            item { OutlinedButton(onClick = { reset = true }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Outlined.Restore, null); Spacer(Modifier.width(8.dp)); Text("استعادة البيانات التجريبية") } }
+            item { OutlinedButton(onClick = { reset = true }, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Outlined.Restore, null, tint = RoyalGold); Spacer(Modifier.width(8.dp)); Text("استعادة البيانات التجريبية") } }
         }
     }
     if (reset) AlertDialog(
@@ -414,7 +579,7 @@ private fun SettingsScreen(nav: NavHostController, vm: ShurayhViewModel) {
 
 @Composable
 private fun AboutScreen(nav: NavHostController) {
-    Page("حول SHURAYH", "NEXVARY Legal Technology", nav) { p ->
+    Page("عنا", "SHURAYH • NEXVARY Legal Technology") { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item { InfoCard("SHURAYH", "منصة عمل قانونية للمحامي: قضايا، عملاء، جلسات، مستندات وبحث قانوني محلي.", Icons.Outlined.Balance) }
             item { InfoCard("مبدأ الخصوصية", "Local-first مع تقليل الصلاحيات وعدم إرسال بيانات العملاء تلقائيًا.", Icons.Outlined.Security) }
@@ -424,20 +589,30 @@ private fun AboutScreen(nav: NavHostController) {
 }
 
 @Composable
+private fun LuxuryCard(content: @Composable ColumnScope.() -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = CardBlack),
+        border = BorderStroke(1.dp, Silver.copy(alpha = .65f)),
+        shape = RoundedCornerShape(16.dp),
+        content = content
+    )
+}
+
+@Composable
 private fun MetricCard(title: String, value: Int, icon: ImageVector) {
-    Card(colors = CardDefaults.cardColors(containerColor = Gunmetal)) {
+    LuxuryCard {
         Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = RoyalGold)
             Spacer(Modifier.width(12.dp))
             Text(title, modifier = Modifier.weight(1f), color = Platinum, fontWeight = FontWeight.Bold)
-            Text(value.toString(), color = ElectricBlue, fontSize = 24.sp, fontWeight = FontWeight.Black)
+            Text(value.toString(), color = RoyalGold, fontSize = 24.sp, fontWeight = FontWeight.Black)
         }
     }
 }
 
 @Composable
 private fun InfoCard(title: String, body: String, icon: ImageVector) {
-    Card(colors = CardDefaults.cardColors(containerColor = Gunmetal), shape = RoundedCornerShape(16.dp)) {
+    LuxuryCard {
         Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.Top) {
             Icon(icon, null, tint = RoyalGold)
             Spacer(Modifier.width(12.dp))
@@ -454,12 +629,18 @@ private fun InfoCard(title: String, body: String, icon: ImageVector) {
 
 @Composable
 private fun EmptyCard(text: String) {
-    Card(colors = CardDefaults.cardColors(containerColor = Gunmetal.copy(alpha = .7f))) { Text(text, Modifier.fillMaxWidth().padding(18.dp), color = Silver) }
+    Card(
+        colors = CardDefaults.cardColors(containerColor = CardBlack),
+        border = BorderStroke(1.dp, Silver.copy(alpha = .45f))
+    ) { Text(text, Modifier.fillMaxWidth().padding(18.dp), color = Silver) }
 }
 
 @Composable
 private fun WarningCard(title: String, body: String) {
-    Card(colors = CardDefaults.cardColors(containerColor = RoyalGold.copy(alpha = .12f))) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = CardBlack),
+        border = BorderStroke(1.dp, RoyalGold.copy(alpha = .65f))
+    ) {
         Column(Modifier.padding(14.dp)) {
             Text(title, color = RoyalGold, fontWeight = FontWeight.Bold)
             Text(body, color = Platinum, fontSize = 12.sp, lineHeight = 18.sp)
@@ -469,12 +650,19 @@ private fun WarningCard(title: String, body: String) {
 
 @Composable
 private fun StatusChip(status: CaseStatus) {
-    val (text, color) = when (status) {
-        CaseStatus.ACTIVE -> "نشطة" to Success
-        CaseStatus.PENDING -> "معلقة" to RoyalGold
-        CaseStatus.CLOSED -> "مغلقة" to Silver
+    val text = when (status) {
+        CaseStatus.ACTIVE -> "نشطة"
+        CaseStatus.PENDING -> "معلقة"
+        CaseStatus.CLOSED -> "مغلقة"
     }
-    Surface(color = color.copy(alpha = .15f), shape = RoundedCornerShape(50)) { Text(text, color = color, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp), fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+    val color = if (status == CaseStatus.CLOSED) Silver else RoyalGold
+    Surface(
+        color = CardBlack,
+        border = BorderStroke(1.dp, color.copy(alpha = .7f)),
+        shape = RoundedCornerShape(50)
+    ) {
+        Text(text, color = color, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+    }
 }
 
 @Composable
