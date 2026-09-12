@@ -28,6 +28,14 @@ class ShurayhAndroid15SmokeTest {
     }
 
     @Test
+    fun tor_secure_messaging_is_reachable() {
+        composeRule.onNodeWithText("المراسلة الآمنة").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("Tor • SHURAYH Secure Messaging").assertIsDisplayed()
+        composeRule.onNodeWithText("حالة Tor").assertIsDisplayed()
+        composeRule.onNodeWithText("جهات الاتصال").assertIsDisplayed()
+    }
+
+    @Test
     fun previously_dead_cards_are_interactive() {
         composeRule.onNodeWithText("مكتبة القانون").performClick()
         composeRule.onNodeWithText("القانون المدني المصري").assertIsDisplayed().performClick()
