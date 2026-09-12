@@ -3,6 +3,7 @@ package com.nexvary.shurayh
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.nexvary.shurayh.core.EncryptedAttachmentStore
@@ -24,6 +25,28 @@ class ShurayhAndroid15SmokeTest {
         composeRule.onNodeWithText("القضايا").assertIsDisplayed()
         composeRule.onNodeWithText("العملاء").assertIsDisplayed()
         composeRule.onNodeWithText("الجلسات").assertIsDisplayed()
+    }
+
+    @Test
+    fun previously_dead_cards_are_interactive() {
+        composeRule.onNodeWithText("مكتبة القانون").performClick()
+        composeRule.onNodeWithText("القانون المدني المصري").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("إغلاق").assertIsDisplayed().performClick()
+
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("ملف المكتب").performClick()
+        composeRule.onNodeWithText("العملاء").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("ملفات الموكلين").assertIsDisplayed()
+
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        composeRule.runOnUiThread { composeRule.activity.onBackPressedDispatcher.onBackPressed() }
+        composeRule.waitForIdle()
+
+        composeRule.onNodeWithText("المحاكم").performClick()
+        composeRule.onNodeWithText("المحاكم الابتدائية").assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("إغلاق").assertIsDisplayed()
     }
 
     @Test
