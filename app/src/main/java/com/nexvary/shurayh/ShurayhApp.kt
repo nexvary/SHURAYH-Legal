@@ -490,11 +490,33 @@ private fun DocumentsScreen(nav: NavHostController, state: ShurayhUiState, vm: S
 
 @Composable
 private fun LawsScreen(nav: NavHostController, laws: List<LawBook>) {
+    var selectedLaw by remember { mutableStateOf<LawBook?>(null) }
     Page("مكتبة القانون", "محتوى مرجعي يحتاج تحققًا من آخر تعديل", nav) { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             item { WarningCard("تنبيه مهني", "المكتبة الحالية مرجعية تجريبية. يجب التحقق من النص الرسمي وآخر تعديل قبل الاستناد إليه في مذكرة أو إجراء.") }
-            items(laws) { l -> InfoCard(l.title, "${l.category}\n${l.sourceNote}", Icons.Outlined.MenuBook) }
+            items(laws) { l ->
+                InfoCard(
+                    l.title,
+                    "${l.category}\n${l.sourceNote}",
+                    Icons.Outlined.MenuBook,
+                    onClick = { selectedLaw = l }
+                )
+            }
         }
+    }
+    selectedLaw?.let { law ->
+        AlertDialog(
+            onDismissRequest = { selectedLaw = null },
+            title = { Text(law.title) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("التصنيف: ${law.category}")
+                    Text(law.sourceNote)
+                    Text("هذا المرجع يحتاج التحقق من النص الرسمي وآخر تعديل قبل الاستناد المهني إليه.")
+                }
+            },
+            confirmButton = { TextButton(onClick = { selectedLaw = null }) { Text("إغلاق") } }
+        )
     }
 }
 
@@ -535,11 +557,11 @@ private fun SearchScreen(nav: NavHostController, state: ShurayhUiState, onQuery:
 private fun OfficeScreen(nav: NavHostController, state: ShurayhUiState) {
     Page("ملف المكتب", "مؤشرات تشغيلية محلية", nav) { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            item { MetricCard("القضايا النشطة", state.cases.count { it.status == CaseStatus.ACTIVE }, Icons.Outlined.Gavel) }
-            item { MetricCard("القضايا المغلقة", state.cases.count { it.status == CaseStatus.CLOSED }, Icons.Outlined.DoneAll) }
-            item { MetricCard("العملاء", state.clients.size, Icons.Outlined.PeopleAlt) }
-            item { MetricCard("الجلسات", state.hearings.size, Icons.Outlined.CalendarMonth) }
-            item { MetricCard("المستندات", state.documents.size, Icons.Outlined.Description) }
+            item { MetricCard("القضايا النشطة", state.cases.count { it.status == CaseStatus.ACTIVE }, Icons.Outlined.Gavel) { nav.navigate(Routes.CASES) } }
+            item { MetricCard("القضايا المغلقة", state.cases.count { it.status == CaseStatus.CLOSED }, Icons.Outlined.DoneAll) { nav.navigate(Routes.CASES) } }
+            item { MetricCard("العملاء", state.clients.size, Icons.Outlined.PeopleAlt) { nav.navigate(Routes.CLIENTS) } }
+            item { MetricCard("الجلسات", state.hearings.size, Icons.Outlined.CalendarMonth) { nav.navigate(Routes.HEARINGS) } }
+            item { MetricCard("المستندات", state.documents.size, Icons.Outlined.Description) { nav.navigate(Routes.DOCUMENTS) } }
         }
     }
 }
@@ -550,10 +572,26 @@ private fun CourtsScreen(nav: NavHostController) {
         "المحاكم الابتدائية", "محاكم الاستئناف", "محاكم الأسرة", "المحاكم الاقتصادية",
         "المحاكم الجنائية", "مجلس الدولة", "مكاتب الشهر العقاري", "النيابات"
     )
+    var selectedEntry by remember { mutableStateOf<String?>(null) }
     Page("المحاكم والجهات", "دليل تنظيمي أولي", nav) { p ->
         LazyColumn(Modifier.fillMaxSize().padding(p), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            items(entries) { InfoCard(it, "سيتم ربط العناوين والدوائر وبيانات الاتصال بمصدر موثق.", Icons.Outlined.AccountBalance) }
+            items(entries) { entry ->
+                InfoCard(
+                    entry,
+                    "اضغط لعرض تفاصيل الجهة وحالة البيانات المتاحة.",
+                    Icons.Outlined.AccountBalance,
+                    onClick = { selectedEntry = entry }
+                )
+            }
         }
+    }
+    selectedEntry?.let { entry ->
+        AlertDialog(
+            onDismissRequest = { selectedEntry = null },
+            title = { Text(entry) },
+            text = { Text("تم تفعيل البطاقة. ستظهر هنا العناوين والدوائر وبيانات الاتصال بعد ربطها بمصدر رسمي موثق.") },
+            confirmButton = { TextButton(onClick = { selectedEntry = null }) { Text("إغلاق") } }
+        )
     }
 }
 
@@ -589,8 +627,9 @@ private fun AboutScreen(nav: NavHostController) {
 }
 
 @Composable
-private fun LuxuryCard(content: @Composable ColumnScope.() -> Unit) {
+private fun LuxuryCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Card(
+        modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = CardBlack),
         border = BorderStroke(1.dp, Silver.copy(alpha = .65f)),
         shape = RoundedCornerShape(16.dp),
@@ -599,8 +638,9 @@ private fun LuxuryCard(content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-private fun MetricCard(title: String, value: Int, icon: ImageVector) {
-    LuxuryCard {
+private fun MetricCard(title: String, value: Int, icon: ImageVector, onClick: (() -> Unit)? = null) {
+    val cardModifier = if (onClick != null) Modifier.fillMaxWidth().clickable(onClick = onClick) else Modifier.fillMaxWidth()
+    LuxuryCard(cardModifier) {
         Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = RoyalGold)
             Spacer(Modifier.width(12.dp))
@@ -611,8 +651,9 @@ private fun MetricCard(title: String, value: Int, icon: ImageVector) {
 }
 
 @Composable
-private fun InfoCard(title: String, body: String, icon: ImageVector) {
-    LuxuryCard {
+private fun InfoCard(title: String, body: String, icon: ImageVector, onClick: (() -> Unit)? = null) {
+    val cardModifier = if (onClick != null) Modifier.fillMaxWidth().clickable(onClick = onClick) else Modifier.fillMaxWidth()
+    LuxuryCard(cardModifier) {
         Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.Top) {
             Icon(icon, null, tint = RoyalGold)
             Spacer(Modifier.width(12.dp))
