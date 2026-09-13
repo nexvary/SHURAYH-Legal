@@ -54,6 +54,11 @@ private object Routes {
     const val NOTIFICATIONS = "notifications"
     const val MENU = "menu"
     const val TOR_MESSAGING = "tor_messaging"
+    const val ASK_SHURAYH = "ask_shurayh"
+    const val SCAN_REVIEW = "scan_review"
+    const val DOCUMENT_FORENSICS = "document_forensics"
+    const val LAWYER_PROFILE = "lawyer_profile"
+    const val LAWYER_NETWORK = "lawyer_network"
     const val CASE_DETAIL = "case/{caseId}"
     fun caseDetail(id: String) = "case/$id"
 }
@@ -106,6 +111,11 @@ fun ShurayhRoot(vm: ShurayhViewModel) {
                 composable(Routes.NOTIFICATIONS) { NotificationsScreen(nav, state) }
                 composable(Routes.MENU) { MenuScreen(nav) }
                 composable(Routes.TOR_MESSAGING) { TorMessagingScreen(nav) }
+                composable(Routes.ASK_SHURAYH) { AskShurayhScreen(nav, state.lawBooks) }
+                composable(Routes.SCAN_REVIEW) { ScanReviewScreen(nav) }
+                composable(Routes.DOCUMENT_FORENSICS) { DocumentForensicsScreen(nav) }
+                composable(Routes.LAWYER_PROFILE) { LawyerProfileScreen(nav) }
+                composable(Routes.LAWYER_NETWORK) { LawyerNetworkScreen(nav) }
                 composable(
                     route = Routes.CASE_DETAIL,
                     arguments = listOf(navArgument("caseId") { type = NavType.StringType })
@@ -215,6 +225,11 @@ private fun HomeScreen(nav: NavHostController, state: ShurayhUiState) {
         ModuleItem("المستندات", "مذكرات وعقود ونماذج", Icons.Outlined.Description, Routes.DOCUMENTS),
         ModuleItem("البحث", "بحث موحد محلي", Icons.Outlined.Search, Routes.SEARCH),
         ModuleItem("ملف المكتب", "مؤشرات العمل", Icons.Outlined.FolderShared, Routes.OFFICE),
+        ModuleItem("اسأل شُرَيْح", "بحث قانوني محلي بالمصادر والصوت", Icons.Outlined.PsychologyAlt, Routes.ASK_SHURAYH),
+        ModuleItem("مسح ومراجعة المحاضر", "استيراد المستند ثم مراجعة النص", Icons.Outlined.DocumentScanner, Routes.SCAN_REVIEW),
+        ModuleItem("الفحص الجنائي للمستند", "مؤشرات أولية دون ادعاء إثبات التزوير", Icons.Outlined.FactCheck, Routes.DOCUMENT_FORENSICS),
+        ModuleItem("صفحة المحامي", "الملف المهني والبيانات المحلية", Icons.Outlined.Badge, Routes.LAWYER_PROFILE),
+        ModuleItem("شبكة المحامين", "تنظيم جهات الاتصال والتعاون المهني", Icons.Outlined.Groups, Routes.LAWYER_NETWORK),
         ModuleItem("المراسلة الآمنة", "Tor • محادثات واتصال آمن", Icons.Outlined.Lock, Routes.TOR_MESSAGING),
         ModuleItem("المحاكم", "دليل الجهات", Icons.Outlined.AccountBalance, Routes.COURTS)
     )
@@ -299,6 +314,11 @@ private fun MenuScreen(nav: NavHostController) {
         ModuleItem("المستندات", "مذكرات وعقود ونماذج", Icons.Outlined.Description, Routes.DOCUMENTS),
         ModuleItem("البحث", "بحث موحد محلي", Icons.Outlined.Search, Routes.SEARCH),
         ModuleItem("ملف المكتب", "مؤشرات العمل", Icons.Outlined.FolderShared, Routes.OFFICE),
+        ModuleItem("اسأل شُرَيْح", "بحث قانوني محلي بالمصادر والصوت", Icons.Outlined.PsychologyAlt, Routes.ASK_SHURAYH),
+        ModuleItem("مسح ومراجعة المحاضر", "استيراد المستند ثم مراجعة النص", Icons.Outlined.DocumentScanner, Routes.SCAN_REVIEW),
+        ModuleItem("الفحص الجنائي للمستند", "مؤشرات أولية دون ادعاء إثبات التزوير", Icons.Outlined.FactCheck, Routes.DOCUMENT_FORENSICS),
+        ModuleItem("صفحة المحامي", "الملف المهني والبيانات المحلية", Icons.Outlined.Badge, Routes.LAWYER_PROFILE),
+        ModuleItem("شبكة المحامين", "تنظيم جهات الاتصال والتعاون المهني", Icons.Outlined.Groups, Routes.LAWYER_NETWORK),
         ModuleItem("المراسلة الآمنة", "Tor • محادثات واتصال آمن", Icons.Outlined.Lock, Routes.TOR_MESSAGING),
         ModuleItem("المحاكم", "دليل الجهات", Icons.Outlined.AccountBalance, Routes.COURTS)
     )
